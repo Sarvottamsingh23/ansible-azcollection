@@ -1,7 +1,7 @@
 ## Deploy Azure VM using AZ collection
 
 # Pre-requisites:
-1. ENsure Ansible, Python is installed and properly configured.
+1. Ensure Ansible, Python is installed and properly configured.
 
 High Level Steps:
 1. Install CLI and ansible[azure] package:
