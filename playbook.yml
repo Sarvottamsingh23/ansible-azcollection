@@ -1,0 +1,69 @@
+---
+- name: Create Azure VM using Az collection
+  hosts: localhost
+  connection: local
+  
+  vars:
+    resource_group: ansible-collection-rg
+    location: eastus
+    vm_name: Ansible-VM
+    vm_size: Standard_B1s
+    admin_username: azureuser
+    admin_password: Azureuser@123!
+
+  tasks:
+
+    - name: Create resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        location: "{{ location }}"
+        auth_source: credential_file
+        profile: default
+
+    - name: Create virtual network
+      azure_rm_virtualnetwork:
+        name: vnet-ansible
+        resource_group: "{{ resource_group }}"
+        address_prefixes: "10.0.0.0/16"
+        location: "{{ location }}"
+
+    - name: Create subnet
+      azure_rm_subnet:
+        name: subnet-ansible
+        resource_group: "{{ resource_group }}"
+        address_prefix: "10.0.1.0/24"
+        virtual_network: vnet-ansible
+
+    - name: Create public IP address
+      azure_rm_publicipaddress:
+        name: ansible-ip-addr
+        resource_group: "{{ resource_group }}"
+        allocation_method: Static
+        location: "{{ location }}"
+
+    - name: Create network interface
+      azure_rm_networkinterface:
+        name: ansible-nic
+        resource_group: "{{ resource_group }}"
+        location: "{{ location }}"
+        virtual_network: vnet-ansible
+        subnet: subnet-ansible
+        ip_configurations:
+          - name: ipconfig1
+            public_ip_address_name: ansible-ip-addr
+
+    - name: Create virtual machine
+      azure_rm_virtualmachine:
+        name: "{{ vm_name }}"
+        resource_group: "{{ resource_group }}"
+        location: "{{ location }}"
+        vm_size: "{{ vm_size }}"
+        admin_username: "{{ admin_username }}"
+        admin_password: "{{ admin_password }}"
+        network_interfaces: ansible-nic
+        managed_disk_type: Standard_LRS
+        image:
+          offer: 0001-com-ubuntu-server-focal
+          publisher: canonical
+          sku: 20_04-lts-gen2
+          version: latest
